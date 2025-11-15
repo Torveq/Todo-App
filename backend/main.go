@@ -13,11 +13,29 @@ type Todo struct {
 var todolist []Todo // basically a python list(global var)
 
 func main() {
-	// Your code here
+	// this sends all requests to the handler function (reference: https://go.dev/doc/articles/wiki/#tmp_3)
+	http.HandleFunc("/", ToDoListHandler)
+	http.ListenAndServe(":8080", nil)
 }
 
 func ToDoListHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	
+	// main reference for json encoding/decoding: https://medium.com/@amanlalwani0807/implement-rest-api-in-golang-using-net-http-deadfd527452
+	if r.Method == "GET" {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(todos)
+	} 
+	else if r.Method == "POST" {
+		var newTodo Todo
+		json.NewDecoder(r.Body).Decode(&newTodo)
+		todos = append(todos, newTodo)	
 
-	// Your code here
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(newTodo)
+	}
+	else {
+		// add error handling for invalid methods
+	}
 }
