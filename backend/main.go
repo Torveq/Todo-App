@@ -40,16 +40,26 @@ func ToDoListHandler(w http.ResponseWriter, r *http.Request) {
 // the get "endpoint"(technically ToDoListHandler is the endpoint and this is just a helper function to handle method requests)
 func listTodos(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK) // sends status code 200 (done automatically anyway)
 	json.NewEncoder(w).Encode(todos)
+	// add error handling for encoding issues
 }
 
 // the post "endpoint"
 func addTodo(w http.ResponseWriter, r *http.Request) {
 	var newTodo Todo
 	json.NewDecoder(r.Body).Decode(&newTodo)
+
+	if newTodo.Title == "" || newTodo.Description == "" {
+		log.Println("Invalid input: one of title or description is empty")
+		return
+	}
+
 	todos = append(todos, newTodo)	
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(newTodo)
+	// add error handling for decoding issues
+	// return status code 400 for any bad requests
 }
