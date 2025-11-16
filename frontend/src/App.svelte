@@ -2,7 +2,47 @@
   import Todo from "./lib/Todo.svelte";
   import type { TodoItem } from "./lib/types";
 
+
+  // references: svelte.dev/docs/svelte/bind and svelte.dev/docs/svelte/$state
   let todos: TodoItem[] = $state([]);
+
+  let newTodoTitle: string = $state("");
+  let newTodoDescription: string = $state("");
+
+  async function addTodo() {
+    const newTodo = {
+      title: newTodoTitle,
+      description: newTodoDescription,
+    };
+
+    if (!newTodo.title || !newTodo.description) {
+      alert("Please fill out both title and description.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8080/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newTodo),
+      });
+
+      if (response.ok) { 
+        const createdTodo: TodoItem = await response.json();
+
+        todos.push(createdTodo);
+
+        newTodoTitle = "";
+        newTodoDescription = "";
+      } else {
+        console.error("Failed to add todo");
+      }
+    } catch (e) {
+      console.error("Could not connect to server. Ensure it is running.", e);
+    }
+  }
 
   async function fetchTodos() {
     try {
@@ -36,9 +76,9 @@
   </div>
 
   <h2 class="todo-list-form-header">Add a Todo</h2>
-  <form class="todo-list-form">
-    <input placeholder="Title" name="title" />
-    <input placeholder="Description" name="description" />
+  <form class="todo-list-form" onsubmit={(e) => { e.preventDefault(); addTodo(); }}>
+    <input placeholder="Title" name="title" bind:value={newTodoTitle}/>  
+    <input placeholder="Description" name="description" bind:value={newTodoDescription}/>
     <button>Add Todo</button>
   </form>
 </main>
